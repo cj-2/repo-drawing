@@ -7,6 +7,7 @@ Criado por Carlos Júnior ([cj-2](https://github.com/cj-2)).
 
 - Repositório original: https://github.com/cj-2/repo-draw
 - Blog: https://cj-2.github.io
+- Como funciona por dentro: [docs/](docs/README.md)
 
 ## Requisitos
 
