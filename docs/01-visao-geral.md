@@ -13,7 +13,7 @@ possível: o projeto cria commits hoje, mas datados no passado.
 
 | Peça | Onde | Papel |
 |---|---|---|
-| Grade de texto | `<nome>-<ano>.txt` | Descreve o desenho: um dígito de 0 a 4 por dia |
+| Grade de texto | `exemplos/` ou `desenhos-gerados/` | Descreve o desenho: um dígito de 0 a 4 por dia |
 | Script | `.agents/skills/desenho/gerar-commits.sh` | Lê a grade, valida e cria os commits datados |
 | Skill | `.agents/skills/desenho/SKILL.md` | Ensina um agente de IA a desenhar a grade, mostrar a prévia e chamar o script |
 
@@ -39,63 +39,74 @@ flowchart LR
     C --> D["Agente preenche<br>os níveis"]
     D --> E["Prévia<br>com as cores reais"]
     E -->|ajustes| D
-    E -->|aprovado| F["gerar-commits.sh<br>baleia-2021.txt"]
-    F --> G["Commits datados<br>no repositório local"]
+    E -->|aprovado| F["gerar-commits.sh<br>--destino ../repo-drawing-result"]
+    F --> G["Commits datados<br>no resultado"]
     G -->|git push| H["Perfil do GitHub"]
 ```
 
-1. **Conferir o ano.** Só cabe um desenho por ano no mesmo repositório, porque
+1. **Conferir o ano.** Só cabe um desenho por ano no resultado, porque
    o GitHub soma os commits de cada dia (detalhes no
    [capítulo 2](02-grafico-de-contribuicoes.md)).
 2. **Gerar a grade vazia.** `gerar-commits.sh --modelo <ano>` imprime 7 linhas
    com `0` nos dias do ano e `.` nos dias que não existem. É o "papel
    quadriculado" do ano certo.
-3. **Desenhar.** Trocar os `0` pelos níveis do desenho.
+3. **Desenhar.** Trocar os `0` pelos níveis do desenho. A grade nova fica em
+   `desenhos-gerados/`, fora do git da base.
 4. **Prévia.** Ver o desenho com as cores reais antes de criar qualquer commit.
    Desfazer commits dá trabalho; editar texto, não.
-5. **Gerar os commits.** O script cria N commits por dia, conforme o nível, e
-   no fim confere a contagem no próprio git.
-6. **Enviar.** `git push`. O desenho aparece quando o GitHub processa os
-   commits.
+5. **Gerar os commits.** O script cria N commits por dia no resultado,
+   conforme o nível, e no fim confere a contagem no próprio git.
+6. **Enviar.** `git push` no resultado. O desenho aparece quando o GitHub
+   processa os commits.
 
-## Base e clones: como refazer os desenhos
+## Base e resultado: onde ficam os desenhos
 
-O projeto separa duas coisas:
+O projeto separa dois repositórios, lado a lado:
 
-- **A base** é o repositório de referência (`repo-drawing` no GitHub): código,
-  grades e documentação, com commits normais. Ela nunca recebe commits de
-  desenho.
-- **O repositório dos desenhos** é um clone da base onde o script gera os
-  commits retroativos. Ele vai para o GitHub com outro nome, como
-  `repo-drawing-result`.
+| | Base (`repo-drawing`) | Resultado (`repo-drawing-result`) |
+|---|---|---|
+| Conteúdo | Código, skill, grades de exemplo e documentação | Só os commits dos desenhos e um README |
+| Commits | Normais, na data em que foram feitos | Retroativos, um conjunto por dia desenhado |
+| Muda quando | O projeto evolui | Um desenho é acrescentado ou a sequência é refeita |
 
 ```mermaid
 flowchart LR
-    B["Base<br>código + grades + docs"] -->|git push| R["GitHub<br>repo-drawing"]
-    B -->|git clone| C["Clone novo"]
-    C -->|gerar-commits.sh<br>para cada grade| D["Clone com<br>os desenhos"]
+    B["Base<br>código + exemplos + docs"] -->|git push| R["GitHub<br>repo-drawing"]
+    B -->|"gerar-commits.sh<br>--destino ../repo-drawing-result"| D["Resultado<br>commits dos desenhos"]
     D -->|git push| G["GitHub<br>repo-drawing-result"]
 ```
 
-Para trocar um desenho, não se edita o histórico: clona-se a base numa pasta
-nova, geram-se todos os desenhos de novo e troca-se o repositório dos desenhos
-no GitHub (a pessoa apaga o antigo e envia o novo). A referência não muda. Reescrever o histórico com
-`git rebase` ou `git filter-repo` também funcionaria, mas:
+Tudo é feito a partir da base. O script recebe a grade pelo caminho e, com
+`--destino`, muda para a pasta do resultado antes de criar os commits (criando
+o repositório, se for preciso). Assim:
 
-- o clone é descartável: se algo der errado, apaga-se a pasta e começa-se de
-  novo, sem risco para a base;
+- o histórico da base fica só com o projeto, e o do resultado só com os
+  desenhos;
+- nenhum ano fica de fora por causa dos commits do projeto, que estão em outro
+  repositório;
+- as grades que você cria ficam em `desenhos-gerados/`, ignorada pelo git:
+  experimentar não suja a base. Uma grade que valha a pena guardar vai para
+  `exemplos/` e é commitada.
+
+O resultado tem um único commit "normal": o `README.md`, que explica o que são
+aqueles commits e aponta para a base. Ele é criado depois dos desenhos, com a
+data do dia, então cai no ano atual, que por isso não serve para desenho.
+
+### Refazer os desenhos
+
+Para trocar um desenho, não se edita o histórico: geram-se todos os desenhos
+de novo numa pasta de resultado nova e troca-se o repositório no GitHub (a
+pessoa apaga o antigo e envia o novo com o mesmo nome). Reescrever o histórico
+com `git rebase` ou `git filter-repo` também funcionaria, mas:
+
+- a pasta nova é descartável: se algo der errado, apaga-se e começa-se de novo,
+  sem risco para a base nem para o resultado antigo;
 - nada local precisa ser apagado (nem `.git`, nem grades), então não há como
   perder trabalho por engano;
 - gerar de novo a partir das grades é previsível e conferido pelo próprio
   script;
 - um `push --force` com centenas de commits reescritos é mais fácil de errar do
   que trocar um repositório por outro.
-
-Duas condições tornam isso possível. As grades precisam estar commitadas na
-base, porque o clone só leva o que está no git. E os commits normais da base
-vão junto para o clone, nas datas em que foram feitos: eles não atrapalham os
-desenhos, mas ocupam o próprio ano, que fica fora dos desenhos (o script recusa
-um ano que já tem commits).
 
 O passo a passo está no [README](../README.md#fazer-uma-nova-sequência-de-desenhos).
 

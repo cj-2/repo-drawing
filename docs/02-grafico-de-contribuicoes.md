@@ -62,9 +62,9 @@ com poucos commits é "pouco" para um perfil muito ativo. Os valores 1, 3, 6 e
 
 Se no seu perfil dois níveis ficarem com o mesmo tom, afaste os valores com uma
 linha na grade, por exemplo `# niveis: 0 1 5 10 20`, e gere o desenho de novo
-num repositório recriado. Commits normais que você faz em outros projetos
-também entram nessa conta, mas caem na data de hoje e não alteram os dias
-desenhados.
+numa pasta de resultado nova (veja o README). Commits normais que você faz em
+outros projetos também entram nessa conta, mas caem na data de hoje e não
+alteram os dias desenhados.
 
 ## Por que só um desenho por ano
 

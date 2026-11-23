@@ -6,13 +6,19 @@ retroativas. Cada desenho é uma grade de texto com o nível de cada dia do ano.
 Criado por Carlos Júnior ([cj-2](https://github.com/cj-2)).
 
 - Repositório original: https://github.com/cj-2/repo-drawing
+- Desenhos gerados a partir dele: https://github.com/cj-2/repo-drawing-result
 - Blog: https://cj-2.github.io
 - Como funciona por dentro: [docs/](docs/README.md)
 
-> **Este repositório é a referência e não tem desenhos.** Ele guarda o script,
-> a skill, as grades e a documentação. Os desenhos são gerados num clone dele e
-> publicados num repositório separado, por exemplo `repo-drawing-result` (veja
-> [Fazer uma nova sequência de desenhos](#fazer-uma-nova-sequência-de-desenhos)).
+> **Este repositório é a base e não tem desenhos.** Ele guarda o script, a
+> skill, as grades de exemplo e a documentação. Tudo é feito daqui, mas os
+> commits dos desenhos vão para um repositório ao lado, o **resultado**
+> (`repo-drawing-result`).
+
+| Repositório | Conteúdo | No GitHub |
+|---|---|---|
+| Base (este) | Código, skill, `exemplos/` e documentação, com commits normais | `repo-drawing` |
+| Resultado | Só os commits dos desenhos e um README apontando para a base | `repo-drawing-result` |
 
 ## Requisitos
 
@@ -23,6 +29,23 @@ Criado por Carlos Júnior ([cj-2](https://github.com/cj-2)).
   traz os dois).
 - Opcional: [GitHub CLI](https://cli.github.com) (`gh`) para criar e apagar o
   repositório pelo terminal.
+
+## Pastas
+
+```
+repo-drawing/
+├── .agents/skills/desenho/   # a skill e o script gerar-commits.sh
+├── .claude/skills/desenho/   # ponte da skill para o Claude Code
+├── exemplos/                 # grades de exemplo (commitadas)
+├── desenhos-gerados/         # grades novas, ignoradas pelo git
+└── docs/                     # como funciona por dentro
+```
+
+- **`exemplos/`** tem os desenhos que vêm com o projeto: `baleia-2018`,
+  `jardim-2019` e `pirata-2020`.
+- **`desenhos-gerados/`** recebe as grades que você cria. Ela está no
+  `.gitignore`, então seus desenhos não entram no histórico da base. Para
+  transformar um desenho em exemplo, mova a grade para `exemplos/` e commite.
 
 ## A skill `desenho`
 
@@ -44,12 +67,12 @@ npx skills add cj-2/repo-drawing -g
 
 O instalador pergunta em quais agentes instalar. Use `-a claude-code` (ou
 `-a codex`, `-a cursor`...) para escolher direto. A skill leva junto o script
-`gerar-commits.sh`.
+`gerar-commits.sh`. Fora desta base, grades e commits ficam na pasta onde o
+agente estiver.
 
 ## Criar um desenho com um agente
 
-Numa pasta vazia, num clone deste repositório ou no seu repositório de
-desenhos, peça ao agente, por exemplo:
+Nesta pasta, peça ao agente, por exemplo:
 
 ```
 /desenho 2021 uma baleia à esquerda e ondas na linha de sábado
@@ -57,13 +80,15 @@ desenhos, peça ao agente, por exemplo:
 
 No Claude Code e em outros agentes com comandos, `/desenho` chama a skill
 direto; nos demais, basta pedir "faça um desenho no gráfico do GitHub: 2021,
-uma baleia à esquerda...". O agente confere se o ano está livre, desenha a
-grade, mostra a prévia com as cores reais e ajusta até você aprovar. Depois
-cria os commits (pedindo confirmação antes). O `git push` fica com você.
+uma baleia à esquerda...". O agente confere se o ano está livre no resultado,
+cria a grade em `desenhos-gerados/`, mostra a prévia com as cores reais e
+ajusta até você aprovar. Depois cria os commits em `../repo-drawing-result`
+(pedindo confirmação antes). O `git push` fica com você.
 
 ## Grade de texto
 
-Cada desenho é um arquivo `.txt`, por exemplo [jardim-2019.txt](jardim-2019.txt):
+Cada desenho é um arquivo `.txt`, por exemplo
+[exemplos/jardim-2019.txt](exemplos/jardim-2019.txt):
 
 ```
 # ano: 2019
@@ -92,27 +117,31 @@ Cada desenho é um arquivo `.txt`, por exemplo [jardim-2019.txt](jardim-2019.txt
 | 3 | `#30a14e` | 6 |
 | 4 | `#216e39` | 10 |
 
-Para fazer à mão, sem agente, rode o script da skill a partir da pasta deste
-repositório (ou use o caminho onde a skill foi instalada). Gere a grade vazia
-do ano, já com os `.` no lugar certo, e troque os `0` pelos níveis do desenho:
+Para fazer à mão, sem agente, gere a grade vazia do ano, já com os `.` no lugar
+certo, e troque os `0` pelos níveis do desenho:
 
 ```bash
-bash .agents/skills/desenho/gerar-commits.sh --modelo 2021 > baleia-2021.txt
+mkdir -p desenhos-gerados
+bash .agents/skills/desenho/gerar-commits.sh --modelo 2021 > desenhos-gerados/baleia-2021.txt
 ```
 
 ## Criar os commits
 
+Daqui da base, com `--destino` apontando para o resultado:
+
 ```bash
-bash .agents/skills/desenho/gerar-commits.sh baleia-2021.txt
+bash .agents/skills/desenho/gerar-commits.sh --destino ../repo-drawing-result desenhos-gerados/baleia-2021.txt
 ```
 
 - Valida a grade e diz onde está o erro, se faltar linha, sobrar coluna ou
   houver nível num dia que não existe no ano.
-- Recusa o ano se o repositório já tiver commits nele (veja o aviso abaixo).
-- Trabalha no repositório git da pasta atual e cria um, se ainda não existir.
+- Cria a pasta e o repositório do resultado, se ainda não existirem.
+- Recusa o ano se o resultado já tiver commits nele (veja o aviso abaixo).
+- Recusa gerar desenhos na própria base: sem `--destino`, rodando aqui, o
+  script para e explica.
 - Para cada dia, cria a quantidade de commits do nível, ao meio-dia no fuso
   -03:00, para nenhum commit cair no dia vizinho no gráfico. Os commits alteram
-  o arquivo `desenhos/<nome-da-grade>.log`.
+  o arquivo `desenhos/<nome-da-grade>.log` do resultado.
 - No fim, confere que a contagem por dia no git bate com a grade.
 
 Algumas centenas de commits levam alguns minutos.
@@ -120,14 +149,26 @@ Algumas centenas de commits levam alguns minutos.
 > **Um desenho por ano.** O GitHub conta commits por dia. Dois desenhos no mesmo
 > ano somariam as contagens e se misturariam, por isso o script recusa um ano
 > que já tem commits. Desenhos de anos diferentes podem ficar no mesmo
-> repositório.
+> resultado.
 
-Commits normais feitos hoje caem na data de hoje e não alteram os desenhos.
+### O README do resultado
+
+Depois dos desenhos, o resultado ganha um `README.md` curto, que diz o que são
+aqueles commits e aponta para esta base. Ele é commitado normalmente, com a data
+do dia em que foi criado:
+
+```bash
+cd ../repo-drawing-result
+git add README.md
+git commit -m "Adiciona o README"
+```
+
+Esse commit cai no ano atual e soma 1 contribuição nesse dia, então o ano atual
+não serve para desenho no resultado.
 
 ## Enviar para o GitHub
 
-Os desenhos vão para um repositório próprio, nunca para o repositório de
-referência. Na pasta onde os commits foram gerados, com o GitHub CLI:
+Na pasta do resultado, com o GitHub CLI:
 
 ```bash
 gh repo create repo-drawing-result --public --source=. --remote=origin --push
@@ -140,60 +181,32 @@ git remote add origin https://github.com/<seu-usuario>/repo-drawing-result.git
 git push -u origin main
 ```
 
-Se a pasta for um clone, ela já tem um `origin` apontando para a referência:
-rode `git remote remove origin` antes.
-
 O GitHub só conta commits da branch padrão. Se o repositório for privado, ative
 "Private contributions" no seu perfil para os desenhos aparecerem.
+
+Para acrescentar o desenho de outro ano depois, gere-o com o mesmo `--destino`
+e rode `git push` no resultado.
 
 ## Fazer uma nova sequência de desenhos
 
 Para trocar, tirar ou refazer desenhos, não edite o histórico nem apague o git
-de nenhuma pasta: **clone a referência numa pasta nova, gere os desenhos lá e
-troque o repositório dos desenhos no GitHub.**
+de nenhuma pasta: **gere os desenhos numa pasta de resultado nova e troque o
+repositório no GitHub.** A base nunca muda, e a pasta antiga do resultado fica
+como estava até você decidir apagá-la.
 
-| Repositório | Conteúdo | No GitHub |
-|---|---|---|
-| Referência (este) | Código, skill, grades e documentação, com commits normais | `repo-drawing` |
-| Desenhos | Um clone da referência com os commits retroativos | `repo-drawing-result` |
-
-A referência nunca recebe commits de desenho. Cada sequência de desenhos nasce
-num clone novo, que pode ser jogado fora. Se algo der errado, basta apagar o
-clone e começar de novo: a referência continua intacta.
-
-1. **Commite as grades na referência.** O clone só leva o que está no git,
-   então grades novas ou editadas precisam estar commitadas:
+1. **Gere tudo numa pasta nova**, a partir das grades que quiser:
 
    ```bash
-   git add *.txt
-   git commit -m "Atualiza as grades"
+   bash .agents/skills/desenho/gerar-commits.sh --destino ../repo-drawing-result-2 exemplos/jardim-2019.txt
+   bash .agents/skills/desenho/gerar-commits.sh --destino ../repo-drawing-result-2 exemplos/pirata-2020.txt
    ```
 
-2. **Clone a referência numa pasta nova**, ao lado da atual:
+   Depois, crie o README do resultado, como em
+   [O README do resultado](#o-readme-do-resultado).
 
-   ```bash
-   git clone . ../repo-drawing-result
-   cd ../repo-drawing-result
-   ```
-
-   Também dá para clonar do GitHub
-   (`git clone https://github.com/cj-2/repo-drawing.git repo-drawing-result`),
-   desde que as grades já tenham sido enviadas.
-
-3. **Gere os desenhos**, um por ano, com o `/desenho` ou a partir das grades:
-
-   ```bash
-   bash .agents/skills/desenho/gerar-commits.sh jardim-2019.txt
-   bash .agents/skills/desenho/gerar-commits.sh pirata-2020.txt
-   ```
-
-   O script confere cada desenho no fim ("OK"). Os commits da referência que
-   vieram no clone ficam nas datas em que foram feitos e não afetam os desenhos. Só não
-   dá para desenhar no ano desses commits: o script recusa.
-
-4. **Apague o repositório antigo dos desenhos no GitHub** (os desenhos antigos
-   somem do perfil). Faça isso só depois de conferir o passo 3, e confira o
-   nome: é o repositório dos desenhos, não o de referência.
+2. **Apague o repositório antigo dos desenhos no GitHub** (os desenhos antigos
+   somem do perfil). Faça isso só depois de conferir o passo 1 ("OK" em todos),
+   e confira o nome: é o resultado, nunca a base.
 
    ```bash
    gh repo delete <seu-usuario>/repo-drawing-result --yes
@@ -203,21 +216,15 @@ clone e começar de novo: a referência continua intacta.
    Pelo `gh`, pode ser preciso liberar a permissão antes com
    `gh auth refresh -s delete_repo`.
 
-5. **Crie o repositório novo dos desenhos e envie a partir do clone.** O clone
-   aponta para a referência como `origin`; tire esse remoto antes:
+3. **Envie a pasta nova com o nome de sempre:**
 
    ```bash
-   git remote remove origin
+   cd ../repo-drawing-result-2
    gh repo create repo-drawing-result --public --source=. --remote=origin --push
    ```
 
-   Ou crie o repositório pelo site, como em [Enviar para o GitHub](#enviar-para-o-github).
-
-A pasta do clone pode ser apagada depois do envio, ou guardada para acrescentar
-desenhos de outros anos. Para um ano novo, commite a grade na referência, traga-a
-para o clone com `git pull --no-rebase ../repo-drawing main`, gere o desenho e faça
-`git push`. Use sempre `--no-rebase`: um rebase recriaria os commits dos
-desenhos com a data de hoje como data de commit.
+Nunca faça rebase no resultado: um rebase recriaria os commits dos desenhos com
+a data de hoje como data de commit.
 
 ## Reproduzir no seu perfil
 
@@ -226,9 +233,6 @@ Dois caminhos:
 - **Só com a skill.** Instale a skill (veja [A skill `desenho`](#a-skill-desenho)),
   abra o seu agente numa pasta vazia, peça os desenhos com o `/desenho` e crie
   um repositório para eles.
-- **A partir desta referência.** Como ela não tem desenhos, pode ser clonada
-  (ou ter um fork) como base sua: troque as grades pelas suas e siga
-  [Fazer uma nova sequência de desenhos](#fazer-uma-nova-sequência-de-desenhos).
-  Os commits da referência vão junto para o clone, mas não contam no seu
-  perfil, porque o e-mail deles não é o seu. O ano deles só fica fora dos
-  desenhos.
+- **A partir desta base.** Clone este repositório (ou faça um fork), peça os
+  desenhos com o `/desenho` ou use os de `exemplos/`, e publique o resultado
+  com o seu usuário. Seus desenhos ficam em `desenhos-gerados/`, fora do git.

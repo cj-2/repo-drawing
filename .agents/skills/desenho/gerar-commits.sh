@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 # Desenha no gráfico de contribuições do GitHub a partir de uma grade de texto,
-# criando commits com datas retroativas no repositório git da pasta atual
-# (cria um se não existir).
+# criando commits com datas retroativas no repositório git da pasta atual ou da
+# pasta indicada em --destino (cria o repositório se não existir).
 #
-# Uso (na pasta do repositório dos desenhos):
+# Uso:
 #   bash <pasta-da-skill>/gerar-commits.sh --modelo 2021 > barco-2021.txt   # grade vazia
-#   bash <pasta-da-skill>/gerar-commits.sh barco-2021.txt                    # cria os commits
+#   bash <pasta-da-skill>/gerar-commits.sh barco-2021.txt                    # commits na pasta atual
+#   bash <pasta-da-skill>/gerar-commits.sh --destino ../result barco-2021.txt  # commits em outra pasta
+#
+# A base do projeto (o repositório que tem este script em .agents/skills/desenho)
+# nunca recebe desenhos: rodando nela, use --destino.
 #
 # Formato da grade:
 #   - 7 linhas de células, de Domingo (1ª) a Sábado (7ª); cada caractere é uma
@@ -45,9 +49,16 @@ if [ "${1:-}" = "--modelo" ]; then
   exit 0
 fi
 
-ARG="${1:?Uso: bash gerar-commits.sh <grade.txt>  |  --modelo <ano>}"
+USO="Uso: bash gerar-commits.sh [--destino <pasta>] <grade.txt>  |  --modelo <ano>"
+DESTINO=""
+if [ "${1:-}" = "--destino" ]; then
+  DESTINO="${2:?$USO}"
+  shift 2
+fi
+ARG="${1:?$USO}"
 [ -f "$ARG" ] || { echo "Grade não encontrada: $ARG" >&2; exit 1; }
-GRADE="$ARG"
+# Caminho absoluto: com --destino, o script muda de pasta antes de criar os commits.
+GRADE="$(cd "$(dirname "$ARG")" && pwd)/$(basename "$ARG")"
 
 # Lê e valida a grade. Saída: "ano AAAA" e depois "AAAA-MM-DD N" por dia com commits.
 DIAS=$(tr -d '\r' < "$GRADE" | gawk -v arq="$(basename "$GRADE")" "$AWK_COMUM"'
@@ -96,6 +107,18 @@ END {
 ANO=$(printf '%s\n' "$DIAS" | head -1 | cut -d' ' -f2)
 DIAS=$(printf '%s\n' "$DIAS" | tail -n +2)
 [ -n "$DIAS" ] || { echo "A grade não tem nenhum dia com commits." >&2; exit 1; }
+
+if [ -n "$DESTINO" ]; then
+  mkdir -p "$DESTINO"
+  cd "$DESTINO"
+fi
+
+# A base do projeto guarda o código e as grades; os desenhos vão para outro repositório.
+if raiz=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f "$raiz/.agents/skills/desenho/gerar-commits.sh" ]; then
+  echo "Esta pasta é a base do projeto (tem a skill em .agents/); os desenhos não vão para ela." >&2
+  echo "Use --destino com outra pasta, por exemplo: --destino ../repo-drawing-result" >&2
+  exit 1
+fi
 
 git rev-parse --git-dir >/dev/null 2>&1 || git init -q -b main
 

@@ -7,23 +7,28 @@ aberto ao lado.
 Ele tem dois modos:
 
 ```bash
-bash gerar-commits.sh --modelo 2021 > baleia-2021.txt   # imprime a grade vazia
-bash gerar-commits.sh baleia-2021.txt                    # cria os commits
+bash gerar-commits.sh --modelo 2021 > desenhos-gerados/baleia-2021.txt     # imprime a grade vazia
+bash gerar-commits.sh --destino ../repo-drawing-result desenhos-gerados/baleia-2021.txt   # cria os commits
 ```
+
+Sem `--destino`, os commits vão para o repositório da pasta atual, o que serve
+para quem usa a skill fora desta base.
 
 ## Visão em blocos
 
 | Linhas | Bloco | O que faz |
 |---|---|---|
-| 18–20 | Preparação | Modo estrito do bash e conferência do `gawk` |
-| 22–30 | `AWK_COMUM` | Funções de calendário usadas pelos dois modos |
-| 32–46 | `--modelo` | Imprime a grade vazia do ano |
-| 48–97 | Leitura da grade | Valida a grade e transforma em "data → commits" |
-| 100–110 | Repositório | Cria o repositório se preciso e recusa ano ocupado |
-| 112–127 | Commits | Cria N commits por dia com a data escolhida |
-| 129–137 | Conferência | Compara a contagem no git com a grade |
+| 22–24 | Preparação | Modo estrito do bash e conferência do `gawk` |
+| 26–34 | `AWK_COMUM` | Funções de calendário usadas pelos dois modos |
+| 36–50 | `--modelo` | Imprime a grade vazia do ano |
+| 52–61 | Argumentos | Lê `--destino` e guarda o caminho absoluto da grade |
+| 63–108 | Leitura da grade | Valida a grade e transforma em "data → commits" |
+| 111–121 | Destino e trava | Vai para a pasta do resultado e recusa a base |
+| 123–133 | Repositório | Cria o repositório se preciso e recusa ano ocupado |
+| 135–150 | Commits | Cria N commits por dia com a data escolhida |
+| 152–160 | Conferência | Compara a contagem no git com a grade |
 
-## Preparação (linhas 18–20)
+## Preparação (linhas 22–24)
 
 ```bash
 set -euo pipefail
@@ -42,7 +47,7 @@ Em seguida o script confere se o `gawk` existe. Ele precisa da versão GNU do
 awk por três extensões: `strftime`, `mktime` e o terceiro argumento de
 `match`, que guarda os grupos capturados num array.
 
-## Funções de calendário (linhas 22–30)
+## Funções de calendário (linhas 26–34)
 
 ```awk
 function inicio(ano) {
@@ -65,13 +70,32 @@ As funções ficam numa variável de shell (`AWK_COMUM`) e são coladas no come�
 de cada programa awk. É um jeito simples de compartilhar código entre dois
 programas awk sem criar um arquivo à parte.
 
-## Modo `--modelo` (linhas 32–46)
+## Modo `--modelo` (linhas 36–50)
 
 Percorre 7 linhas × `ncol` colunas e imprime `0` quando `indice` cai dentro do
 ano e `.` quando não. Como só escreve na saída padrão, é seguro rodar em
 qualquer pasta.
 
-## Leitura e validação da grade (linhas 48–97)
+## Argumentos (linhas 52–61)
+
+```bash
+if [ "${1:-}" = "--destino" ]; then
+  DESTINO="${2:?$USO}"
+  shift 2
+fi
+ARG="${1:?$USO}"
+GRADE="$(cd "$(dirname "$ARG")" && pwd)/$(basename "$ARG")"
+```
+
+- `${2:?$USO}` para o script com a mensagem de uso se o valor faltar. É a
+  forma curta de validar argumentos obrigatórios no bash.
+- `shift 2` descarta `--destino` e a pasta, e o resto segue como se a opção
+  não existisse.
+- A grade vira um **caminho absoluto** logo aqui. Mais adiante o script muda
+  de pasta para o destino; um caminho relativo como
+  `desenhos-gerados/x.txt` deixaria de apontar para o arquivo.
+
+## Leitura e validação da grade (linhas 63–108)
 
 A grade passa por `tr -d '\r'`, para aceitar arquivos salvos no Windows, e
 depois por um programa awk que:
@@ -101,12 +125,39 @@ Outro detalhe: `erro()` marca `falhou = 1` e chama `exit 1`. No awk, `exit`
 dentro de uma regra ainda executa o bloco `END`, por isso o `END` começa com
 `if (falhou) exit 1`, para não continuar validando uma grade que já falhou.
 
-As linhas 96–97 separam a primeira linha (o ano) do resto (os dias). Passar
+As linhas 107–108 separam a primeira linha (o ano) do resto (os dias). Passar
 dados entre etapas como texto, uma linha por registro, é o estilo clássico de
 Unix: fácil de inspecionar com `echo` e de processar com `awk`, `cut` e
 `sort`.
 
-## Repositório e ano ocupado (linhas 100–110)
+## Destino e trava da base (linhas 111–121)
+
+```bash
+if [ -n "$DESTINO" ]; then
+  mkdir -p "$DESTINO"
+  cd "$DESTINO"
+fi
+
+if raiz=$(git rev-parse --show-toplevel 2>/dev/null) && [ -f "$raiz/.agents/skills/desenho/gerar-commits.sh" ]; then
+  echo "Esta pasta é a base do projeto (tem a skill em .agents/); os desenhos não vão para ela." >&2
+  exit 1
+fi
+```
+
+Com `--destino`, o script cria a pasta se preciso e passa a trabalhar nela.
+Tudo o que vem depois (`git init`, commits, conferência) acontece no destino.
+
+A trava pergunta ao git qual é a raiz do repositório em que está
+(`git rev-parse --show-toplevel`) e confere se essa raiz tem o próprio script
+em `.agents/skills/desenho/`. Se tiver, é a base, e o script para. Isso cobre
+os dois erros mais prováveis: esquecer o `--destino` e passar um destino dentro
+da base (como `desenhos-gerados/x`), que o git enxerga como parte do mesmo
+repositório.
+
+É uma regra que poderia ficar só na documentação ou na skill, mas no código
+ela vale para qualquer pessoa, com ou sem agente.
+
+## Repositório e ano ocupado (linhas 123–133)
 
 ```bash
 git rev-parse --git-dir >/dev/null 2>&1 || git init -q -b main
@@ -122,7 +173,7 @@ nada, o que mataria o script. Daí o `|| true`.
 Se o ano já tem commits, o script para. É essa a garantia de "um desenho por
 ano" do [capítulo 2](02-grafico-de-contribuicoes.md#por-que-só-um-desenho-por-ano).
 
-## Criação dos commits (linhas 112–127)
+## Criação dos commits (linhas 135–150)
 
 ```bash
 printf '%s\n' "$DIAS" | while read -r data n; do
@@ -154,7 +205,7 @@ processo novo. Para um projeto desse tamanho, simplicidade vale mais que
 velocidade. Com muito mais commits, valeria gerar o histórico de uma vez com
 `git fast-import`.
 
-## Conferência (linhas 129–137)
+## Conferência (linhas 152–160)
 
 ```bash
 real=$(git log --format=%ad --date=format:%Y-%m-%d | grep "^$ANO-" | sort | uniq -c | awk '{print $2" "$1}')

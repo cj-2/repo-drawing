@@ -29,23 +29,24 @@ repo-drawing/
 │   └── gerar-commits.sh    # o script que faz o trabalho de verdade
 ├── .claude/skills/desenho/
 │   └── SKILL.md            # ponte: o Claude Code só lê .claude/skills/
-├── baleia-2018.txt         # grades: um desenho por ano
-├── jardim-2019.txt
-├── pirata-2020.txt
+├── exemplos/               # grades de exemplo, um desenho por ano (commitadas)
+│   ├── baleia-2018.txt
+│   ├── jardim-2019.txt
+│   └── pirata-2020.txt
+├── desenhos-gerados/       # grades novas, ignoradas pelo git (.gitignore)
 ├── docs/                   # esta documentação
 └── README.md               # guia de uso
 ```
 
 ## Esta pasta é a base, não o repositório dos desenhos
 
-Esta pasta é o repositório de referência, publicado no GitHub como
-`cj-2/repo-drawing`. Ela guarda o código, as grades e a documentação, com commits
-normais, e não tem desenhos. Os desenhos são gerados num **clone** dela e
-publicados num repositório separado, como `repo-drawing-result` (veja
-[Base e clones](01-visao-geral.md#base-e-clones-como-refazer-os-desenhos)).
+Esta pasta é a base do projeto, publicada no GitHub como `cj-2/repo-drawing`.
+Ela guarda o código, as grades de exemplo e a documentação, com commits
+normais, e não tem desenhos. Tudo é feito daqui, mas os commits dos desenhos
+vão para um repositório ao lado, o **resultado** (`repo-drawing-result`), com a
+opção `--destino` do script (veja
+[Base e resultado](01-visao-geral.md#base-e-resultado-onde-ficam-os-desenhos)).
 
-> **Não rode `gerar-commits.sh <grade>` nesta pasta.** O script trabalha no
-> repositório git da pasta atual: ele criaria centenas de commits retroativos
-> na base. Clone a base numa pasta nova e gere lá, como no
-> [README](../README.md#fazer-uma-nova-sequência-de-desenhos). Gerar a grade
-> vazia com `--modelo` é seguro em qualquer lugar, porque não toca no git.
+O próprio script protege a base: rodando aqui sem `--destino`, ou com um
+destino dentro desta pasta, ele recusa e explica. Gerar a grade vazia com
+`--modelo` é seguro em qualquer lugar, porque não toca no git.

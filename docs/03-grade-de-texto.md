@@ -1,9 +1,11 @@
 # 3. A grade de texto
 
 Cada desenho é um arquivo `<nome>-<ano>.txt`. É o formato mais simples que
-ainda dá para editar à mão, ler num diff e um agente gerar sem erro.
+ainda dá para editar à mão, ler num diff e um agente gerar sem erro. As grades
+que vêm com o projeto ficam em `exemplos/`; as que você cria ficam em
+`desenhos-gerados/`, fora do git.
 
-## Exemplo: `jardim-2019.txt`
+## Exemplo: `exemplos/jardim-2019.txt`
 
 ```
 # ano: 2019

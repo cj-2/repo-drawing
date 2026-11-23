@@ -1,6 +1,6 @@
 ---
 name: desenho
-description: Cria uma pixel art no gráfico de contribuições do GitHub — desenha a grade do ano em texto, mostra a prévia, ajusta até o usuário aprovar e cria os commits com datas retroativas. Use quando o usuário pedir um desenho no gráfico de contribuições, informando ano e descrição (ex. "desenho 2021 uma baleia à esquerda"). Use também para recriar os commits a partir de grades `.txt` já existentes (ex. depois de recriar o repositório).
+description: Cria uma pixel art no gráfico de contribuições do GitHub — desenha a grade do ano em texto, mostra a prévia, ajusta até o usuário aprovar e cria os commits com datas retroativas. Use quando o usuário pedir um desenho no gráfico de contribuições, informando ano e descrição (ex. "desenho 2021 uma baleia à esquerda"). Use também para gerar ou refazer os commits a partir de grades `.txt` já existentes (ex. as de `exemplos/`).
 ---
 
 <!-- Não use cifrão seguido de número neste arquivo: alguns agentes trocam por argumentos do comando. -->
@@ -11,13 +11,29 @@ O pedido do usuário traz o ano e a descrição do desenho. Se faltar algum dos
 dois, pergunte antes de começar. Responda no idioma do usuário.
 
 Se o usuário pedir para criar os commits a partir de grades que já existem
-(por exemplo, depois de recriar o repositório), não desenhe nada: siga a seção
+(por exemplo, as de `exemplos/`), não desenhe nada: siga a seção
 "Recriar a partir de grades existentes", no fim deste arquivo.
 
 O script `gerar-commits.sh` fica na mesma pasta deste `SKILL.md`; nos comandos
-abaixo, `<skill>` é o caminho dessa pasta. Os desenhos ficam no repositório git
-da pasta atual: se a pasta atual não for o repositório de desenhos do usuário
-(ou uma pasta vazia para criá-lo), pergunte onde trabalhar.
+abaixo, `<skill>` é o caminho dessa pasta.
+
+## Onde ficam as coisas
+
+Confira se a pasta atual é a **base do projeto**: um repositório git que tem
+`.agents/skills/desenho/gerar-commits.sh`.
+
+- **Na base**, nada de desenho entra no histórico dela:
+  - grades novas vão para `desenhos-gerados/` (ignorada pelo git);
+  - `exemplos/` guarda as grades de exemplo, que são commitadas;
+  - os commits vão para um repositório ao lado, o **resultado**, com
+    `--destino`. O nome padrão é `../repo-drawing-result`; confirme com o
+    usuário na primeira vez. O script recusa gerar desenhos na base.
+- **Fora da base** (skill instalada globalmente, pasta vazia ou repositório de
+  desenhos do usuário), grades e commits ficam na pasta atual, sem `--destino`.
+  Se a pasta não parecer o lugar certo, pergunte onde trabalhar.
+
+Nos comandos abaixo, `<grades>` é `desenhos-gerados` na base e `.` fora dela, e
+`<destino>` é a pasta do resultado (na base) ou `.` (fora dela).
 
 Requisitos: `git`, `bash` e `gawk` (no Windows, o Git Bash traz os três).
 
@@ -27,13 +43,13 @@ O GitHub soma commits do mesmo dia, então só pode haver um desenho por ano no
 repositório:
 
 ```bash
-git log --format=%ad --date=format:%Y 2>/dev/null | grep -c "^<ano>$"
-ls *-<ano>.txt 2>/dev/null
+git -C <destino> log --format=%ad --date=format:%Y 2>/dev/null | grep -c "^<ano>$"
+ls <grades>/*-<ano>.txt exemplos/*-<ano>.txt 2>/dev/null
 ```
 
-Se já houver commits nesse ano, avise e pare: a saída é escolher outro ano ou
-recriar o repositório do zero (veja "Recriar a partir de grades existentes").
-O script também recusa um ano com commits.
+Se já houver commits nesse ano no resultado, avise e pare: a saída é escolher
+outro ano ou refazer a sequência (veja "Recriar a partir de grades
+existentes"). O script também recusa um ano com commits.
 
 Se houver uma grade desse ano mas nenhum commit, ela é um desenho ainda não
 gerado: mostre a prévia dela e pergunte se o usuário quer usá-la (vá para o
@@ -45,7 +61,8 @@ sobrescreva a grade sem o ok.
 Crie a grade vazia do ano com o nome do desenho (minúsculas, sem espaços):
 
 ```bash
-bash <skill>/gerar-commits.sh --modelo <ano> > <nome>-<ano>.txt
+mkdir -p <grades>
+bash <skill>/gerar-commits.sh --modelo <ano> > <grades>/<nome>-<ano>.txt
 ```
 
 A grade tem 7 linhas (Domingo a Sábado, de cima para baixo) e uma coluna por
@@ -88,35 +105,41 @@ simplificar, aumentar ou trocar as cores das partes.
 
 ## 4. Criar os commits
 
-Depois da aprovação, informe quantos commits serão criados e pergunte se pode
-seguir.
-
-Se a pasta atual for a base do projeto (tem a skill em `.agents/` e nenhum
-commit de desenho), não gere os commits ali: commite a grade (com o ok do
-usuário) e gere num clone, como no passo 2 de "Recriar a partir de grades
-existentes".
-
-Com o ok:
+Depois da aprovação, informe quantos commits serão criados e onde (a pasta do
+resultado), e pergunte se pode seguir. Com o ok:
 
 ```bash
-bash <skill>/gerar-commits.sh <nome>-<ano>.txt
+bash <skill>/gerar-commits.sh --destino <destino> <grades>/<nome>-<ano>.txt
 ```
 
-O script valida a grade, cria os commits e confere sozinho a contagem por dia
-(termina com "OK"). Algumas centenas de commits levam alguns minutos: rode em
-segundo plano se o agente permitir. Não faça `git push` sem o usuário pedir.
+Fora da base, sem `--destino`: `bash <skill>/gerar-commits.sh <nome>-<ano>.txt`.
+
+O script valida a grade, cria o repositório do resultado se ainda não existir,
+cria os commits e confere sozinho a contagem por dia (termina com "OK").
+Algumas centenas de commits levam alguns minutos: rode em segundo plano se o
+agente permitir. Não faça `git push` sem o usuário pedir.
+
+Se o resultado ainda não tiver `README.md`, crie um curto, depois de todos os
+desenhos, dizendo que os commits são desenhos gerados e apontando para o
+repositório da base (a URL do `origin` da base, se houver). Commite-o
+normalmente, com a data de hoje. Esse commit cai no ano atual, então o ano
+atual não serve para desenho no resultado.
+
+Uma grade em `desenhos-gerados/` que o usuário queira guardar como exemplo vai
+para `exemplos/` e é commitada na base, só com o ok dele.
 
 ## 5. Lembretes finais
 
 - O GitHub calcula as cores em relação aos dias do próprio usuário. Se os tons
   ficarem parecidos no perfil, afaste os valores com uma linha
-  `# niveis: 0 1 5 10 20` na grade e gere o desenho de novo num clone novo
-  (veja "Recriar a partir de grades existentes").
+  `# niveis: 0 1 5 10 20` na grade e refaça a sequência (veja "Recriar a
+  partir de grades existentes").
 - Os commits usam o `user.email` do git, que precisa estar cadastrado na conta
   do GitHub.
-- Para aparecer no perfil: `git push`, ou criar o repositório no GitHub e
-  enviar (ex. `gh repo create <nome> --public --source=. --push`). O GitHub só
-  conta commits da branch padrão.
+- Para aparecer no perfil: `git push` no resultado, ou criar o repositório no
+  GitHub e enviar a partir da pasta do resultado (ex.
+  `gh repo create <nome> --public --source=. --push`). O GitHub só conta
+  commits da branch padrão.
 
 ## Recriar a partir de grades existentes
 
@@ -124,59 +147,45 @@ Use quando o usuário já tem as grades `<nome>-<ano>.txt` e quer só gerar os
 commits: refazer a sequência de desenhos, publicar num repositório novo ou
 gerar um ano que ainda não foi gerado.
 
-Nunca apague o `.git` da pasta do usuário para recriar. A pasta onde ficam as
-grades é a base (o repositório de referência, sem desenhos); os desenhos são
-gerados num clone novo, e o repositório antigo dos desenhos no GitHub é trocado
-pelo novo.
+Nunca apague o `.git` de nenhuma pasta para recriar. Uma sequência refeita vai
+para uma pasta de resultado nova, e o repositório antigo dos desenhos no GitHub
+é trocado pelo novo.
 
-1. Liste as grades (`ls *-[0-9][0-9][0-9][0-9].txt`) e confira se há no máximo
-   uma por ano. Com duas do mesmo ano, pergunte qual usar.
-2. Escolha onde gerar:
-   - **Só acrescentar um ano livre** (nenhum commit nesse ano, conferido como
-     no passo 1) num repositório de desenhos que já existe: gere ali mesmo.
-   - **Refazer a sequência**, ou a pasta atual é a base do projeto (tem a skill
-     em `.agents/` e nenhum commit de desenho): gere num clone novo. Confira com
-     `git status` se as grades estão commitadas, porque o clone só leva o que
-     está no git; se não estiverem, mostre quais e peça para commitar. Depois:
+1. Liste as grades (`exemplos/` e `desenhos-gerados/` na base, ou a pasta atual
+   fora dela) e confira se há no máximo uma por ano. Com duas do mesmo ano,
+   pergunte qual usar. Pergunte quais grades entram, se não estiver claro.
+2. Escolha o destino:
+   - **Acrescentar um ano livre** a um resultado que já existe: use esse
+     resultado. Confira o ano como no passo 1.
+   - **Refazer a sequência:** use uma pasta nova, que ainda não exista (ex.
+     `../repo-drawing-result` ou, se ela já existir, `../repo-drawing-result-2`).
+     A pasta antiga fica como está; apagá-la é decisão do usuário.
 
-     ```bash
-     git clone . ../<pasta-nova>
-     ```
-
-     Sugira um nome para `<pasta-nova>` (ex. `repo-drawing-result`, o mesmo
-     nome do repositório dos desenhos no GitHub), confira que ela ainda não
-     existe e trabalhe dentro dela a partir daqui. Se a pasta das
-     grades não for um repositório git, crie uma pasta nova vazia e copie as
-     grades para ela.
-   Grades de anos que já têm commits no repositório escolhido ficam de fora:
-   avise quais são. O ano dos commits normais do projeto (os que vieram no
-   clone) também fica de fora, porque o script o recusa.
+   Grades de anos que já têm commits no destino ficam de fora: avise quais são.
 3. A prévia é opcional: mostre se o usuário pedir ou se a grade parecer
    estranha. Some os commits de todas as grades (nível 1 = 1, 2 = 3, 3 = 6,
-   4 = 10, ou os valores de `# niveis:` da grade), informe o total por ano e
-   peça o ok.
+   4 = 10, ou os valores de `# niveis:` da grade), informe o total por ano e o
+   destino, e peça o ok.
 4. Rode o script para cada grade, uma de cada vez e em segundo plano se der:
 
    ```bash
-   bash <skill>/gerar-commits.sh <nome>-<ano>.txt
+   bash <skill>/gerar-commits.sh --destino <destino> <grade>
    ```
 
    Cada execução precisa terminar com "OK". Se uma falhar, pare e mostre o
-   erro antes de seguir para a próxima.
+   erro antes de seguir para a próxima. Depois, crie o `README.md` do resultado
+   como no passo 4.
 5. Para publicar uma sequência refeita, o usuário apaga o repositório antigo
    dos desenhos no GitHub (pelo site ou com
    `gh repo delete <usuario>/<repo-dos-desenhos> --yes`). Não apague você: peça
    que ele faça, só depois que todos os desenhos tiverem dado "OK", e lembre de
-   conferir o nome: o repositório de referência (a base, sem desenhos) nunca é
-   apagado nem recebe os commits dos desenhos.
-   No clone, tire o remoto que aponta para a pasta base e envie para o
-   repositório novo, mas só quando o usuário pedir:
+   conferir o nome: o repositório da base nunca é apagado nem recebe os commits
+   dos desenhos. Depois, na pasta do resultado, envie para o repositório novo,
+   mas só quando o usuário pedir:
 
    ```bash
-   git remote remove origin
    gh repo create <repo-dos-desenhos> --public --source=. --remote=origin --push
    ```
 
-6. Para levar ao clone uma grade nova da base depois, use
-   `git pull --no-rebase <pasta-base> main`. Nunca faça rebase de um
-   repositório com desenhos: os commits seriam recriados com a data de hoje.
+6. Nunca faça rebase de um repositório com desenhos: os commits seriam
+   recriados com a data de hoje.
