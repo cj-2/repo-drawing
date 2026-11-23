@@ -1,17 +1,17 @@
-# repo-draw
+# repo-drawing
 
 Desenha pixel art no gráfico de contribuições do GitHub criando commits com datas
 retroativas. Cada desenho é uma grade de texto com o nível de cada dia do ano.
 
 Criado por Carlos Júnior ([cj-2](https://github.com/cj-2)).
 
-- Repositório original: https://github.com/cj-2/repo-draw
+- Repositório original: https://github.com/cj-2/repo-drawing
 - Blog: https://cj-2.github.io
 - Como funciona por dentro: [docs/](docs/README.md)
 
 > **Este repositório é a referência e não tem desenhos.** Ele guarda o script,
 > a skill, as grades e a documentação. Os desenhos são gerados num clone dele e
-> publicados num repositório separado, por exemplo `repo-draw-desenhos` (veja
+> publicados num repositório separado, por exemplo `repo-drawing-result` (veja
 > [Fazer uma nova sequência de desenhos](#fazer-uma-nova-sequência-de-desenhos)).
 
 ## Requisitos
@@ -39,7 +39,7 @@ leem direto. O Claude Code só lê `.claude/skills/`, por isso
 Para usar em qualquer outra pasta, instale globalmente (requer Node.js 22.20+):
 
 ```bash
-npx skills add cj-2/repo-draw -g
+npx skills add cj-2/repo-drawing -g
 ```
 
 O instalador pergunta em quais agentes instalar. Use `-a claude-code` (ou
@@ -130,13 +130,13 @@ Os desenhos vão para um repositório próprio, nunca para o repositório de
 referência. Na pasta onde os commits foram gerados, com o GitHub CLI:
 
 ```bash
-gh repo create repo-draw-desenhos --public --source=. --remote=origin --push
+gh repo create repo-drawing-result --public --source=. --remote=origin --push
 ```
 
 Ou crie um repositório vazio pelo site e envie:
 
 ```bash
-git remote add origin https://github.com/<seu-usuario>/repo-draw-desenhos.git
+git remote add origin https://github.com/<seu-usuario>/repo-drawing-result.git
 git push -u origin main
 ```
 
@@ -154,8 +154,8 @@ troque o repositório dos desenhos no GitHub.**
 
 | Repositório | Conteúdo | No GitHub |
 |---|---|---|
-| Referência (este) | Código, skill, grades e documentação, com commits normais | `repo-draw` |
-| Desenhos | Um clone da referência com os commits retroativos | `repo-draw-desenhos` |
+| Referência (este) | Código, skill, grades e documentação, com commits normais | `repo-drawing` |
+| Desenhos | Um clone da referência com os commits retroativos | `repo-drawing-result` |
 
 A referência nunca recebe commits de desenho. Cada sequência de desenhos nasce
 num clone novo, que pode ser jogado fora. Se algo der errado, basta apagar o
@@ -172,12 +172,12 @@ clone e começar de novo: a referência continua intacta.
 2. **Clone a referência numa pasta nova**, ao lado da atual:
 
    ```bash
-   git clone . ../repo-draw-desenhos
-   cd ../repo-draw-desenhos
+   git clone . ../repo-drawing-result
+   cd ../repo-drawing-result
    ```
 
    Também dá para clonar do GitHub
-   (`git clone https://github.com/cj-2/repo-draw.git repo-draw-desenhos`),
+   (`git clone https://github.com/cj-2/repo-drawing.git repo-drawing-result`),
    desde que as grades já tenham sido enviadas.
 
 3. **Gere os desenhos**, um por ano, com o `/desenho` ou a partir das grades:
@@ -196,7 +196,7 @@ clone e começar de novo: a referência continua intacta.
    nome: é o repositório dos desenhos, não o de referência.
 
    ```bash
-   gh repo delete <seu-usuario>/repo-draw-desenhos --yes
+   gh repo delete <seu-usuario>/repo-drawing-result --yes
    ```
 
    Ou pelo site: Settings do repositório → Danger Zone → Delete this repository.
@@ -208,14 +208,14 @@ clone e começar de novo: a referência continua intacta.
 
    ```bash
    git remote remove origin
-   gh repo create repo-draw-desenhos --public --source=. --remote=origin --push
+   gh repo create repo-drawing-result --public --source=. --remote=origin --push
    ```
 
    Ou crie o repositório pelo site, como em [Enviar para o GitHub](#enviar-para-o-github).
 
 A pasta do clone pode ser apagada depois do envio, ou guardada para acrescentar
 desenhos de outros anos. Para um ano novo, commite a grade na referência, traga-a
-para o clone com `git pull --no-rebase ../repo-draw main`, gere o desenho e faça
+para o clone com `git pull --no-rebase ../repo-drawing main`, gere o desenho e faça
 `git push`. Use sempre `--no-rebase`: um rebase recriaria os commits dos
 desenhos com a data de hoje como data de commit.
 

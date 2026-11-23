@@ -93,7 +93,7 @@ de shell escritos dentro do `SKILL.md`.
 - **Dentro deste repositório**, não é preciso instalar nada: os agentes acham a
   skill em `.agents/` ou `.claude/`.
 - **Em qualquer outra pasta**, a skill é instalada globalmente com
-  `npx skills add cj-2/repo-draw -g` (veja o [README](../README.md#a-skill-desenho)).
+  `npx skills add cj-2/repo-drawing -g` (veja o [README](../README.md#a-skill-desenho)).
   O script vai junto, e a skill o chama pelo caminho da própria pasta
   (`<skill>/gerar-commits.sh`). Por isso o `SKILL.md` nunca fixa um caminho
   absoluto.

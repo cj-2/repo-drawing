@@ -143,7 +143,7 @@ pelo novo.
      git clone . ../<pasta-nova>
      ```
 
-     Sugira um nome para `<pasta-nova>` (ex. `repo-draw-desenhos`, o mesmo
+     Sugira um nome para `<pasta-nova>` (ex. `repo-drawing-result`, o mesmo
      nome do repositório dos desenhos no GitHub), confira que ela ainda não
      existe e trabalhe dentro dela a partir daqui. Se a pasta das
      grades não for um repositório git, crie uma pasta nova vazia e copie as

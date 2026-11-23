@@ -62,19 +62,19 @@ flowchart LR
 
 O projeto separa duas coisas:
 
-- **A base** é o repositório de referência (`repo-draw` no GitHub): código,
+- **A base** é o repositório de referência (`repo-drawing` no GitHub): código,
   grades e documentação, com commits normais. Ela nunca recebe commits de
   desenho.
 - **O repositório dos desenhos** é um clone da base onde o script gera os
   commits retroativos. Ele vai para o GitHub com outro nome, como
-  `repo-draw-desenhos`.
+  `repo-drawing-result`.
 
 ```mermaid
 flowchart LR
-    B["Base<br>código + grades + docs"] -->|git push| R["GitHub<br>repo-draw"]
+    B["Base<br>código + grades + docs"] -->|git push| R["GitHub<br>repo-drawing"]
     B -->|git clone| C["Clone novo"]
     C -->|gerar-commits.sh<br>para cada grade| D["Clone com<br>os desenhos"]
-    D -->|git push| G["GitHub<br>repo-draw-desenhos"]
+    D -->|git push| G["GitHub<br>repo-drawing-result"]
 ```
 
 Para trocar um desenho, não se edita o histórico: clona-se a base numa pasta

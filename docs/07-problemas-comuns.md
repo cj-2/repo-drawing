@@ -89,12 +89,12 @@ corrigido, o que exige `git push --force` e cuidado redobrado.
 Para evitar o problema, gere os desenhos sempre num clone da base:
 
 ```bash
-git clone . ../repo-draw-desenhos
-cd ../repo-draw-desenhos
+git clone . ../repo-drawing-result
+cd ../repo-drawing-result
 bash .agents/skills/desenho/gerar-commits.sh baleia-2018.txt
 ```
 
-Clone a referência (a pasta local ou `cj-2/repo-draw` no GitHub), nunca o
+Clone a referência (a pasta local ou `cj-2/repo-drawing` no GitHub), nunca o
 repositório dos desenhos: ele já tem os desenhos antigos, e o script recusaria
 esses anos.
 
@@ -112,4 +112,4 @@ sempre `git pull --no-rebase`.
 Versões antigas da skill paravam ao achar uma grade do ano. A versão atual
 trata uma grade sem commits como "desenho ainda não gerado" e tem a seção
 "Recriar a partir de grades existentes". Se o seu agente usa uma cópia
-instalada globalmente, atualize-a com `npx skills add cj-2/repo-draw -g`.
+instalada globalmente, atualize-a com `npx skills add cj-2/repo-drawing -g`.

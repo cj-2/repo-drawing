@@ -1,4 +1,4 @@
-# Documentação do repo-draw
+# Documentação do repo-drawing
 
 Esta pasta explica como o projeto funciona por dentro. O [README da raiz](../README.md)
 diz **como usar**; aqui o foco é **por que funciona assim**, para quem é da área e
@@ -23,7 +23,7 @@ o 4 e o 5 antes.
 ## Mapa do repositório
 
 ```
-repo-draw/
+repo-drawing/
 ├── .agents/skills/desenho/
 │   ├── SKILL.md            # instruções para o agente (formato Agent Skills)
 │   └── gerar-commits.sh    # o script que faz o trabalho de verdade
@@ -39,9 +39,9 @@ repo-draw/
 ## Esta pasta é a base, não o repositório dos desenhos
 
 Esta pasta é o repositório de referência, publicado no GitHub como
-`cj-2/repo-draw`. Ela guarda o código, as grades e a documentação, com commits
+`cj-2/repo-drawing`. Ela guarda o código, as grades e a documentação, com commits
 normais, e não tem desenhos. Os desenhos são gerados num **clone** dela e
-publicados num repositório separado, como `repo-draw-desenhos` (veja
+publicados num repositório separado, como `repo-drawing-result` (veja
 [Base e clones](01-visao-geral.md#base-e-clones-como-refazer-os-desenhos)).
 
 > **Não rode `gerar-commits.sh <grade>` nesta pasta.** O script trabalha no
