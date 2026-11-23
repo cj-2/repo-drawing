@@ -89,7 +89,14 @@ simplificar, aumentar ou trocar as cores das partes.
 ## 4. Criar os commits
 
 Depois da aprovação, informe quantos commits serão criados e pergunte se pode
-seguir. Com o ok:
+seguir.
+
+Se a pasta atual for a base do projeto (tem a skill em `.agents/` e nenhum
+commit de desenho), não gere os commits ali: commite a grade (com o ok do
+usuário) e gere num clone, como no passo 2 de "Recriar a partir de grades
+existentes".
+
+Com o ok:
 
 ```bash
 bash <skill>/gerar-commits.sh <nome>-<ano>.txt
@@ -103,8 +110,8 @@ segundo plano se o agente permitir. Não faça `git push` sem o usuário pedir.
 
 - O GitHub calcula as cores em relação aos dias do próprio usuário. Se os tons
   ficarem parecidos no perfil, afaste os valores com uma linha
-  `# niveis: 0 1 5 10 20` na grade e gere o desenho de novo num repositório
-  recriado.
+  `# niveis: 0 1 5 10 20` na grade e gere o desenho de novo num clone novo
+  (veja "Recriar a partir de grades existentes").
 - Os commits usam o `user.email` do git, que precisa estar cadastrado na conta
   do GitHub.
 - Para aparecer no perfil: `git push`, ou criar o repositório no GitHub e
@@ -114,15 +121,36 @@ segundo plano se o agente permitir. Não faça `git push` sem o usuário pedir.
 ## Recriar a partir de grades existentes
 
 Use quando o usuário já tem as grades `<nome>-<ano>.txt` e quer só gerar os
-commits (repositório novo, recriado ou um ano que ainda não foi gerado).
+commits: refazer a sequência de desenhos, publicar num repositório novo ou
+gerar um ano que ainda não foi gerado.
+
+Nunca apague o `.git` da pasta do usuário para recriar. A pasta onde ficam as
+grades é a base (o repositório de referência, sem desenhos); os desenhos são
+gerados num clone novo, e o repositório antigo dos desenhos no GitHub é trocado
+pelo novo.
 
 1. Liste as grades (`ls *-[0-9][0-9][0-9][0-9].txt`) e confira se há no máximo
    uma por ano. Com duas do mesmo ano, pergunte qual usar.
-2. Para cada ano, confira os commits como no passo 1. Grades de anos que já têm
-   commits ficam de fora: avise quais são. Se o usuário quiser regerar todos, o
-   caminho é recriar o repositório: apagar o repositório no GitHub (o usuário
-   faz isso) e, na pasta, só `.git` e `desenhos/`. As grades `.txt` não estão
-   no git e precisam ser mantidas; confirme antes de apagar qualquer coisa.
+2. Escolha onde gerar:
+   - **Só acrescentar um ano livre** (nenhum commit nesse ano, conferido como
+     no passo 1) num repositório de desenhos que já existe: gere ali mesmo.
+   - **Refazer a sequência**, ou a pasta atual é a base do projeto (tem a skill
+     em `.agents/` e nenhum commit de desenho): gere num clone novo. Confira com
+     `git status` se as grades estão commitadas, porque o clone só leva o que
+     está no git; se não estiverem, mostre quais e peça para commitar. Depois:
+
+     ```bash
+     git clone . ../<pasta-nova>
+     ```
+
+     Sugira um nome para `<pasta-nova>` (ex. `repo-draw-desenhos`, o mesmo
+     nome do repositório dos desenhos no GitHub), confira que ela ainda não
+     existe e trabalhe dentro dela a partir daqui. Se a pasta das
+     grades não for um repositório git, crie uma pasta nova vazia e copie as
+     grades para ela.
+   Grades de anos que já têm commits no repositório escolhido ficam de fora:
+   avise quais são. O ano dos commits normais do projeto (os que vieram no
+   clone) também fica de fora, porque o script o recusa.
 3. A prévia é opcional: mostre se o usuário pedir ou se a grade parecer
    estranha. Some os commits de todas as grades (nível 1 = 1, 2 = 3, 3 = 6,
    4 = 10, ou os valores de `# niveis:` da grade), informe o total por ano e
@@ -135,5 +163,20 @@ commits (repositório novo, recriado ou um ano que ainda não foi gerado).
 
    Cada execução precisa terminar com "OK". Se uma falhar, pare e mostre o
    erro antes de seguir para a próxima.
-5. Não faça `git push` sem o usuário pedir. Depois, veja os lembretes do
-   passo 5.
+5. Para publicar uma sequência refeita, o usuário apaga o repositório antigo
+   dos desenhos no GitHub (pelo site ou com
+   `gh repo delete <usuario>/<repo-dos-desenhos> --yes`). Não apague você: peça
+   que ele faça, só depois que todos os desenhos tiverem dado "OK", e lembre de
+   conferir o nome: o repositório de referência (a base, sem desenhos) nunca é
+   apagado nem recebe os commits dos desenhos.
+   No clone, tire o remoto que aponta para a pasta base e envie para o
+   repositório novo, mas só quando o usuário pedir:
+
+   ```bash
+   git remote remove origin
+   gh repo create <repo-dos-desenhos> --public --source=. --remote=origin --push
+   ```
+
+6. Para levar ao clone uma grade nova da base depois, use
+   `git pull --no-rebase <pasta-base> main`. Nunca faça rebase de um
+   repositório com desenhos: os commits seriam recriados com a data de hoje.

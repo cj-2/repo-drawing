@@ -52,8 +52,8 @@ de projeto mais importantes:
 6. **Limites de conteúdo.** Só desenhos originais: nada de personagens ou
    marcas conhecidas.
 7. **Caminho alternativo.** A seção "Recriar a partir de grades existentes"
-   cobre quem já tem as grades e quer só os commits. Sem ela, o agente seguia o
-   passo 1, achava a grade do ano e parava.
+   cobre quem já tem as grades e quer só os commits, gerando num clone da
+   base. Sem ela, o agente seguia o passo 1, achava a grade do ano e parava.
 
 O item 7 foi acrescentado depois de um teste: a pergunta "a skill consegue
 recriar a partir dos arquivos?" mostrou que o script conseguia, mas as
@@ -107,8 +107,10 @@ Algumas ações ficam com a pessoa, de propósito:
   essa ação e pedir que a pessoa rode o comando. Foi o que aconteceu na
   primeira publicação deste projeto: o `gh repo create --public --push` foi
   barrado, e o comando foi rodado à mão.
-- **Apagar.** Apagar o repositório no GitHub ou o `.git` local não tem volta. A
-  skill pede confirmação e manda manter as grades `.txt`.
+- **Apagar.** Apagar o repositório antigo no GitHub não tem volta. Por isso a
+  skill nunca apaga nada: para refazer os desenhos, ela gera tudo num clone
+  novo da base e pede que a pessoa apague o repositório antigo, só depois que
+  todos os desenhos novos deram "OK". Nada local é apagado.
 
 Uma boa skill deixa claro quais passos o agente faz sozinho e quais precisam de
 um "sim".

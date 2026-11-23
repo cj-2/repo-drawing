@@ -36,15 +36,16 @@ repo-draw/
 └── README.md               # guia de uso
 ```
 
-## Este repositório não é o dos desenhos
+## Esta pasta é a base, não o repositório dos desenhos
 
-Os commits que formam os desenhos ficam num repositório separado, publicado no
-GitHub. Este aqui guarda só o código, as grades e a documentação, com commits
-na data em que foram feitos.
+Esta pasta é o repositório de referência, publicado no GitHub como
+`cj-2/repo-draw`. Ela guarda o código, as grades e a documentação, com commits
+normais, e não tem desenhos. Os desenhos são gerados num **clone** dela e
+publicados num repositório separado, como `repo-draw-desenhos` (veja
+[Base e clones](01-visao-geral.md#base-e-clones-como-refazer-os-desenhos)).
 
 > **Não rode `gerar-commits.sh <grade>` nesta pasta.** O script trabalha no
 > repositório git da pasta atual: ele criaria centenas de commits retroativos
-> aqui, misturados com o histórico do projeto. Para gerar um desenho, use uma
-> pasta separada (veja [Problemas comuns](07-problemas-comuns.md#gerei-os-commits-no-repositório-errado)).
-> Gerar a grade vazia com `--modelo` é seguro em qualquer lugar, porque não
-> toca no git.
+> na base. Clone a base numa pasta nova e gere lá, como no
+> [README](../README.md#fazer-uma-nova-sequência-de-desenhos). Gerar a grade
+> vazia com `--modelo` é seguro em qualquer lugar, porque não toca no git.

@@ -9,6 +9,11 @@ Criado por Carlos Júnior ([cj-2](https://github.com/cj-2)).
 - Blog: https://cj-2.github.io
 - Como funciona por dentro: [docs/](docs/README.md)
 
+> **Este repositório é a referência e não tem desenhos.** Ele guarda o script,
+> a skill, as grades e a documentação. Os desenhos são gerados num clone dele e
+> publicados num repositório separado, por exemplo `repo-draw-desenhos` (veja
+> [Fazer uma nova sequência de desenhos](#fazer-uma-nova-sequência-de-desenhos)).
+
 ## Requisitos
 
 - `git` configurado com `user.name` e `user.email`. O e-mail precisa estar
@@ -43,8 +48,8 @@ O instalador pergunta em quais agentes instalar. Use `-a claude-code` (ou
 
 ## Criar um desenho com um agente
 
-Numa pasta vazia (ou no seu repositório de desenhos), peça ao agente, por
-exemplo:
+Numa pasta vazia, num clone deste repositório ou no seu repositório de
+desenhos, peça ao agente, por exemplo:
 
 ```
 /desenho 2021 uma baleia à esquerda e ondas na linha de sábado
@@ -121,44 +126,59 @@ Commits normais feitos hoje caem na data de hoje e não alteram os desenhos.
 
 ## Enviar para o GitHub
 
-Com o GitHub CLI:
+Os desenhos vão para um repositório próprio, nunca para o repositório de
+referência. Na pasta onde os commits foram gerados, com o GitHub CLI:
 
 ```bash
-gh repo create repo-draw --public --source=. --remote=origin --push
+gh repo create repo-draw-desenhos --public --source=. --remote=origin --push
 ```
 
 Ou crie um repositório vazio pelo site e envie:
 
 ```bash
-git remote add origin https://github.com/<seu-usuario>/repo-draw.git
+git remote add origin https://github.com/<seu-usuario>/repo-draw-desenhos.git
 git push -u origin main
 ```
+
+Se a pasta for um clone, ela já tem um `origin` apontando para a referência:
+rode `git remote remove origin` antes.
 
 O GitHub só conta commits da branch padrão. Se o repositório for privado, ative
 "Private contributions" no seu perfil para os desenhos aparecerem.
 
 ## Fazer uma nova sequência de desenhos
 
-Para trocar, tirar ou refazer desenhos, não edite o histórico: **apague tudo e
-recrie o repositório do zero.** Como o objetivo do repositório é só desenhar no
-gráfico de contribuições, recriá-lo não perde nada. As grades `.txt` ficam na
-pasta e podem ser usadas de novo.
+Para trocar, tirar ou refazer desenhos, não edite o histórico nem apague o git
+de nenhuma pasta: **clone a referência numa pasta nova, gere os desenhos lá e
+troque o repositório dos desenhos no GitHub.**
 
-1. **Apague o repositório no GitHub** (os desenhos antigos somem do perfil):
+| Repositório | Conteúdo | No GitHub |
+|---|---|---|
+| Referência (este) | Código, skill, grades e documentação, com commits normais | `repo-draw` |
+| Desenhos | Um clone da referência com os commits retroativos | `repo-draw-desenhos` |
+
+A referência nunca recebe commits de desenho. Cada sequência de desenhos nasce
+num clone novo, que pode ser jogado fora. Se algo der errado, basta apagar o
+clone e começar de novo: a referência continua intacta.
+
+1. **Commite as grades na referência.** O clone só leva o que está no git,
+   então grades novas ou editadas precisam estar commitadas:
 
    ```bash
-   gh repo delete <seu-usuario>/repo-draw --yes
+   git add *.txt
+   git commit -m "Atualiza as grades"
    ```
 
-   Ou pelo site: Settings do repositório → Danger Zone → Delete this repository.
-   Pelo `gh`, pode ser preciso liberar a permissão antes com
-   `gh auth refresh -s delete_repo`.
-
-2. **Apague o git local e os registros dos desenhos antigos:**
+2. **Clone a referência numa pasta nova**, ao lado da atual:
 
    ```bash
-   rm -rf .git desenhos pixel-art.log
+   git clone . ../repo-draw-desenhos
+   cd ../repo-draw-desenhos
    ```
+
+   Também dá para clonar do GitHub
+   (`git clone https://github.com/cj-2/repo-draw.git repo-draw-desenhos`),
+   desde que as grades já tenham sido enviadas.
 
 3. **Gere os desenhos**, um por ano, com o `/desenho` ou a partir das grades:
 
@@ -167,19 +187,48 @@ pasta e podem ser usadas de novo.
    bash .agents/skills/desenho/gerar-commits.sh pirata-2020.txt
    ```
 
-4. **Commite os arquivos do projeto** (esse commit cai na data de hoje e não
-   afeta os desenhos):
+   O script confere cada desenho no fim ("OK"). Os commits da referência que
+   vieram no clone ficam nas datas em que foram feitos e não afetam os desenhos. Só não
+   dá para desenhar no ano desses commits: o script recusa.
+
+4. **Apague o repositório antigo dos desenhos no GitHub** (os desenhos antigos
+   somem do perfil). Faça isso só depois de conferir o passo 3, e confira o
+   nome: é o repositório dos desenhos, não o de referência.
 
    ```bash
-   git add README.md .agents .claude *.txt
-   git commit -m "Adiciona skill, desenhos e documentação"
+   gh repo delete <seu-usuario>/repo-draw-desenhos --yes
    ```
 
-5. **Crie o repositório e envie**, como em [Enviar para o GitHub](#enviar-para-o-github).
+   Ou pelo site: Settings do repositório → Danger Zone → Delete this repository.
+   Pelo `gh`, pode ser preciso liberar a permissão antes com
+   `gh auth refresh -s delete_repo`.
+
+5. **Crie o repositório novo dos desenhos e envie a partir do clone.** O clone
+   aponta para a referência como `origin`; tire esse remoto antes:
+
+   ```bash
+   git remote remove origin
+   gh repo create repo-draw-desenhos --public --source=. --remote=origin --push
+   ```
+
+   Ou crie o repositório pelo site, como em [Enviar para o GitHub](#enviar-para-o-github).
+
+A pasta do clone pode ser apagada depois do envio, ou guardada para acrescentar
+desenhos de outros anos. Para um ano novo, commite a grade na referência, traga-a
+para o clone com `git pull --no-rebase ../repo-draw main`, gere o desenho e faça
+`git push`. Use sempre `--no-rebase`: um rebase recriaria os commits dos
+desenhos com a data de hoje como data de commit.
 
 ## Reproduzir no seu perfil
 
-Instale a skill (veja [A skill `desenho`](#a-skill-desenho)),
-abra o seu agente numa pasta vazia, peça os desenhos com o `/desenho` e crie um
-repositório novo para eles. Para mudar os desenhos depois, faça como em
-[Fazer uma nova sequência de desenhos](#fazer-uma-nova-sequência-de-desenhos).
+Dois caminhos:
+
+- **Só com a skill.** Instale a skill (veja [A skill `desenho`](#a-skill-desenho)),
+  abra o seu agente numa pasta vazia, peça os desenhos com o `/desenho` e crie
+  um repositório para eles.
+- **A partir desta referência.** Como ela não tem desenhos, pode ser clonada
+  (ou ter um fork) como base sua: troque as grades pelas suas e siga
+  [Fazer uma nova sequência de desenhos](#fazer-uma-nova-sequência-de-desenhos).
+  Os commits da referência vão junto para o clone, mas não contam no seu
+  perfil, porque o e-mail deles não é o seu. O ano deles só fica fora dos
+  desenhos.

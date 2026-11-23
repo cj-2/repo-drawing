@@ -58,21 +58,46 @@ flowchart LR
 6. **Enviar.** `git push`. O desenho aparece quando o GitHub processa os
    commits.
 
-## Por que apagar e recriar em vez de editar
+## Base e clones: como refazer os desenhos
 
-Para trocar um desenho, o projeto recomenda apagar o repositório (no GitHub e o
-`.git` local) e gerar tudo de novo a partir das grades. Reescrever o histórico
-com `git rebase` ou `git filter-repo` também funcionaria, mas:
+O projeto separa duas coisas:
 
-- o repositório dos desenhos não tem nada além dos commits gerados, então não
-  há o que preservar;
+- **A base** é o repositório de referência (`repo-draw` no GitHub): código,
+  grades e documentação, com commits normais. Ela nunca recebe commits de
+  desenho.
+- **O repositório dos desenhos** é um clone da base onde o script gera os
+  commits retroativos. Ele vai para o GitHub com outro nome, como
+  `repo-draw-desenhos`.
+
+```mermaid
+flowchart LR
+    B["Base<br>código + grades + docs"] -->|git push| R["GitHub<br>repo-draw"]
+    B -->|git clone| C["Clone novo"]
+    C -->|gerar-commits.sh<br>para cada grade| D["Clone com<br>os desenhos"]
+    D -->|git push| G["GitHub<br>repo-draw-desenhos"]
+```
+
+Para trocar um desenho, não se edita o histórico: clona-se a base numa pasta
+nova, geram-se todos os desenhos de novo e troca-se o repositório dos desenhos
+no GitHub (a pessoa apaga o antigo e envia o novo). A referência não muda. Reescrever o histórico com
+`git rebase` ou `git filter-repo` também funcionaria, mas:
+
+- o clone é descartável: se algo der errado, apaga-se a pasta e começa-se de
+  novo, sem risco para a base;
+- nada local precisa ser apagado (nem `.git`, nem grades), então não há como
+  perder trabalho por engano;
 - gerar de novo a partir das grades é previsível e conferido pelo próprio
   script;
-- um `push --force` com centenas de commits reescritos é mais fácil de errar
-  do que apagar e recriar.
+- um `push --force` com centenas de commits reescritos é mais fácil de errar do
+  que trocar um repositório por outro.
 
-As grades ficam fora desse repositório (aqui, neste repositório de
-documentação), então apagar o `.git` dos desenhos não perde nada.
+Duas condições tornam isso possível. As grades precisam estar commitadas na
+base, porque o clone só leva o que está no git. E os commits normais da base
+vão junto para o clone, nas datas em que foram feitos: eles não atrapalham os
+desenhos, mas ocupam o próprio ano, que fica fora dos desenhos (o script recusa
+um ano que já tem commits).
+
+O passo a passo está no [README](../README.md#fazer-uma-nova-sequência-de-desenhos).
 
 ## Próximo passo
 

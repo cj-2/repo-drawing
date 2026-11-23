@@ -24,8 +24,9 @@ valores com uma linha na grade:
 # niveis: 0 1 5 10 20
 ```
 
-Os commits já criados não mudam, então é preciso gerar o desenho de novo num
-repositório recriado.
+Os commits já criados não mudam, então é preciso gerar os desenhos de novo
+num clone novo da base e trocar o repositório dos desenhos no GitHub (veja o
+[README](../README.md#fazer-uma-nova-sequência-de-desenhos)).
 
 ## "Já existem N commits em AAAA neste repositório"
 
@@ -33,8 +34,12 @@ O script recusa um ano que já tem commits para não misturar dois desenhos.
 Saídas:
 
 - escolher outro ano;
-- recriar o repositório dos desenhos: apagar o repositório no GitHub e, na
-  pasta, só `.git` e `desenhos/`, e gerar de novo a partir das grades.
+- refazer a sequência: clonar a base numa pasta nova, gerar todos os desenhos
+  lá e trocar o repositório dos desenhos no GitHub (veja o
+  [README](../README.md#fazer-uma-nova-sequência-de-desenhos)).
+
+Se o ano recusado é o ano atual, o motivo costuma ser os commits normais da
+base, que vieram no clone. O ano desses commits não serve para desenho.
 
 ## "Erro na grade: ..."
 
@@ -65,9 +70,9 @@ aparecer ao adicionar as grades; são inofensivos.
 
 ## Gerei os commits no repositório errado
 
-O script trabalha no repositório git da pasta atual. Se rodou numa pasta que
-tinha outro histórico (por exemplo, este repositório de documentação), os
-commits retroativos se misturaram com os do projeto.
+O script trabalha no repositório git da pasta atual. Se rodou na base do
+projeto em vez de num clone, os commits retroativos se misturaram com os do
+projeto.
 
 Se ainda não fez `git push`, volte ao último commit antes deles. Ache o hash
 com `git log --oneline` (os gerados têm a mensagem `pixel AAAA-MM-DD (i/n)`) e
@@ -81,14 +86,26 @@ Isso apaga os commits gerados e qualquer mudança não salva na pasta, então
 confira o hash antes. Se já enviou, o histórico remoto também precisa ser
 corrigido, o que exige `git push --force` e cuidado redobrado.
 
-Para evitar o problema, gere os desenhos sempre numa pasta própria:
+Para evitar o problema, gere os desenhos sempre num clone da base:
 
 ```bash
-git clone https://github.com/<seu-usuario>/repo-draw.git ../repo-draw-desenhos
-cp baleia-2018.txt ../repo-draw-desenhos/
+git clone . ../repo-draw-desenhos
 cd ../repo-draw-desenhos
-bash ../repo-draw/.agents/skills/desenho/gerar-commits.sh baleia-2018.txt
+bash .agents/skills/desenho/gerar-commits.sh baleia-2018.txt
 ```
+
+Clone a referência (a pasta local ou `cj-2/repo-draw` no GitHub), nunca o
+repositório dos desenhos: ele já tem os desenhos antigos, e o script recusaria
+esses anos.
+
+## Fiz rebase no repositório dos desenhos
+
+Um `git rebase` (ou `git pull` configurado para rebase) recria os commits com a
+data de hoje como data de commit. A data de autor continua a mesma, mas os
+desenhos ficam com duas datas diferentes (veja o
+[capítulo 5](05-datas-no-git.md#todo-commit-tem-duas-datas)). O mais seguro é
+gerar de novo num clone novo. Para trazer grades da base para um clone, use
+sempre `git pull --no-rebase`.
 
 ## O agente parou no passo 1 mesmo com a grade pronta
 
